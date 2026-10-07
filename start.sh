@@ -51,13 +51,15 @@ fi
 
 echo "  Frontend PID: $FRONTEND_PID"
 
+DEFAULT_DOMAIN="crinkliest-mirna-loftier.ngrok-free.dev"
+NGROK_DOMAIN="${NGROK_DOMAIN:-$DEFAULT_DOMAIN}"
+
 # ── Start ngrok tunnel ─────────────────────────────────────
 if [ -n "$NGROK_DOMAIN" ]; then
   echo -e "${GREEN}► Starting ngrok on PERMANENT static domain: ${BOLD}$NGROK_DOMAIN${NC}..."
-  ngrok http --domain="$NGROK_DOMAIN" 3001 --log=stdout > /tmp/agents_ngrok.log 2>&1 &
+  ngrok http --url="$NGROK_DOMAIN" 3001 --log=stdout > /tmp/agents_ngrok.log 2>&1 &
 else
   echo -e "${YELLOW}► Starting ngrok tunnel (ephemeral URL)...${NC}"
-  echo -e "  ${CYAN}Tip: Set NGROK_DOMAIN in .env to keep the URL permanent across restarts!${NC}"
   ngrok http 3001 --log=stdout > /tmp/agents_ngrok.log 2>&1 &
 fi
 NGROK_PID=$!

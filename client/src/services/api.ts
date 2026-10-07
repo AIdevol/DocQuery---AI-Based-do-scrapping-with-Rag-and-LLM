@@ -28,12 +28,18 @@ export const getEnvBackendUrl = (): string => {
   return '';
 };
 
+export const DEFAULT_STATIC_BACKEND_URL = 'https://crinkliest-mirna-loftier.ngrok-free.dev';
+
 export const getBackendServerUrl = (): string => {
   const custom = getCustomBackendUrl();
   if (custom) {
     return custom;
   }
-  return getEnvBackendUrl();
+  const envUrl = getEnvBackendUrl();
+  if (envUrl) {
+    return envUrl;
+  }
+  return DEFAULT_STATIC_BACKEND_URL;
 };
 
 export const setBackendServerUrl = (url: string): void => {
@@ -61,11 +67,19 @@ export const getApiBaseUrl = (): string => {
   return base ? `${base}/api` : '/api';
 };
 
+export const apiFetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const headers = new Headers(init?.headers);
+  if (!headers.has('ngrok-skip-browser-warning')) {
+    headers.set('ngrok-skip-browser-warning', 'true');
+  }
+  return fetch(input, { ...init, headers });
+};
+
 export const api = {
   // Health
   async getHealth(customBaseUrl?: string) {
     const base = customBaseUrl ? `${customBaseUrl.replace(/\/$/, '')}/api` : getApiBaseUrl();
-    const res = await fetch(`${base}/health`);
+    const res = await apiFetch(`${base}/health`);
     if (!res.ok) throw new Error(`Health check returned status ${res.status}`);
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
@@ -78,10 +92,10 @@ export const api = {
     const start = Date.now();
     try {
       const cleanUrl = url.trim().replace(/\/$/, '');
-      const healthUrl = cleanUrl ? `${cleanUrl}/api/health` : '/api/health';
+      const healthUrl = cleanUrl ? `${cleanUrl}/api/health` : `${getApiBaseUrl()}/health`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const res = await fetch(healthUrl, { signal: controller.signal });
+      const res = await apiFetch(healthUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
       const latencyMs = Date.now() - start;
 
@@ -113,13 +127,13 @@ export const api = {
 
   // Files
   async getFiles(): Promise<StoredFile[]> {
-    const res = await fetch(`${getApiBaseUrl()}/files`);
+    const res = await apiFetch(`${getApiBaseUrl()}/files`);
     if (!res.ok) throw new Error('Failed to fetch files');
     return res.json();
   },
 
   async getFileById(id: string): Promise<StoredFile> {
-    const res = await fetch(`${getApiBaseUrl()}/files/${id}`);
+    const res = await apiFetch(`${getApiBaseUrl()}/files/${id}`);
     if (!res.ok) throw new Error('Failed to fetch file');
     return res.json();
   },
@@ -136,7 +150,7 @@ export const api = {
     if (!files || files.length === 0) return [];
     const formData = new FormData();
     files.forEach(f => formData.append('files', f));
-    const res = await fetch(`${getApiBaseUrl()}/files/upload`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/files/upload`, {
       method: 'POST',
       body: formData
     });
@@ -151,7 +165,7 @@ export const api = {
   },
 
   async renameFile(id: string, newName: string): Promise<StoredFile> {
-    const res = await fetch(`${getApiBaseUrl()}/files/${id}/rename`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/files/${id}/rename`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newName })
@@ -161,7 +175,7 @@ export const api = {
   },
 
   async deleteFile(id: string): Promise<void> {
-    const res = await fetch(`${getApiBaseUrl()}/files/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`${getApiBaseUrl()}/files/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete file');
   },
 
@@ -169,7 +183,7 @@ export const api = {
     id: string,
     columns: Array<{ name: string; purpose?: string; usageGuidance?: string; role?: string }>
   ): Promise<StoredFile> {
-    const res = await fetch(`${getApiBaseUrl()}/files/${id}/fields`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/files/${id}/fields`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ columns })
@@ -184,7 +198,7 @@ export const api = {
   async suggestFileFields(
     id: string
   ): Promise<{ columns: Array<{ name: string; purpose?: string; usageGuidance?: string; role?: string }> }> {
-    const res = await fetch(`${getApiBaseUrl()}/files/${id}/suggest-fields`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/files/${id}/suggest-fields`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -206,7 +220,7 @@ export const api = {
     customInstructions?: string;
     systemPrompt?: string;
   }): Promise<ChatMessage> {
-    const res = await fetch(`${getApiBaseUrl()}/chat`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params)
@@ -219,7 +233,7 @@ export const api = {
   },
 
   async getChatHistory(): Promise<ChatSession[]> {
-    const res = await fetch(`${getApiBaseUrl()}/chat/history`);
+    const res = await apiFetch(`${getApiBaseUrl()}/chat/history`);
     if (!res.ok) throw new Error('Failed to fetch chat history');
     return res.json();
   },
@@ -230,7 +244,7 @@ export const api = {
     providerId?: string;
     modelId?: string;
   }): Promise<ChatSession> {
-    const res = await fetch(`${getApiBaseUrl()}/chat/history`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/chat/history`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params)
@@ -240,7 +254,7 @@ export const api = {
   },
 
   async renameChatSession(id: string, title: string): Promise<ChatSession> {
-    const res = await fetch(`${getApiBaseUrl()}/chat/history/${id}`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/chat/history/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title })
@@ -250,19 +264,19 @@ export const api = {
   },
 
   async deleteChatSession(id: string): Promise<void> {
-    const res = await fetch(`${getApiBaseUrl()}/chat/history/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`${getApiBaseUrl()}/chat/history/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete session');
   },
 
   // Providers
   async getProviders(): Promise<AIProviderConfig[]> {
-    const res = await fetch(`${getApiBaseUrl()}/providers`);
+    const res = await apiFetch(`${getApiBaseUrl()}/providers`);
     if (!res.ok) throw new Error('Failed to fetch providers');
     return res.json();
   },
 
   async addProvider(provider: Partial<AIProviderConfig>): Promise<AIProviderConfig> {
-    const res = await fetch(`${getApiBaseUrl()}/providers`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/providers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(provider)
@@ -275,7 +289,7 @@ export const api = {
   },
 
   async updateProvider(id: string, updates: Partial<AIProviderConfig>): Promise<AIProviderConfig> {
-    const res = await fetch(`${getApiBaseUrl()}/providers/${id}`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/providers/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -285,17 +299,17 @@ export const api = {
   },
 
   async deleteProvider(id: string): Promise<void> {
-    const res = await fetch(`${getApiBaseUrl()}/providers/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`${getApiBaseUrl()}/providers/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete provider');
   },
 
   async setDefaultProvider(id: string): Promise<void> {
-    const res = await fetch(`${getApiBaseUrl()}/providers/${id}/default`, { method: 'POST' });
+    const res = await apiFetch(`${getApiBaseUrl()}/providers/${id}/default`, { method: 'POST' });
     if (!res.ok) throw new Error('Failed to set default provider');
   },
 
   async validateProvider(provider: Partial<AIProviderConfig>) {
-    const res = await fetch(`${getApiBaseUrl()}/providers/validate`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/providers/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(provider)
@@ -306,13 +320,13 @@ export const api = {
 
   // Settings
   async getSettings(): Promise<AppSettings> {
-    const res = await fetch(`${getApiBaseUrl()}/settings`);
+    const res = await apiFetch(`${getApiBaseUrl()}/settings`);
     if (!res.ok) throw new Error('Failed to fetch settings');
     return res.json();
   },
 
   async updateSettings(settings: Partial<AppSettings>): Promise<AppSettings> {
-    const res = await fetch(`${getApiBaseUrl()}/settings`, {
+    const res = await apiFetch(`${getApiBaseUrl()}/settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings)

@@ -1,10 +1,5 @@
-# Netlify Redirects File
-# ---------------------------------------------------------------------------------
-# OPTION 1: Netlify API Proxy to Permanent Backend
-# If your backend is deployed on Render, Railway, or static ngrok,
-# uncomment the line below and replace with your permanent backend URL.
-# This eliminates CORS errors and automatically routes /api/* to your server.
-# /api/*  https://YOUR-BACKEND.onrender.com/api/:splat  200!
+# Permanent Netlify API Proxy to Backend
+/api/*  https://crinkliest-mirna-loftier.ngrok-free.dev/api/:splat  200!
 
 # SPA Client-Side Routing Fallback
 /*  /index.html  200

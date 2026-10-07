@@ -1571,6 +1571,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    const ngrokUrl = 'https://crinkliest-mirna-loftier.ngrok-free.dev';
+                    setBackendUrlInput(ngrokUrl);
+                    setBackendServerUrl(ngrokUrl);
+                    setServerSavedSuccess(true);
+                    setTimeout(() => setServerSavedSuccess(false), 2500);
+                  }}
+                  className="px-2.5 py-1 rounded-md bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-300 font-semibold transition-colors cursor-pointer border border-teal-200 dark:border-teal-800"
+                >
+                  ⚡ Use Live Ngrok (crinkliest-mirna-loftier.ngrok-free.dev)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     clearBackendServerUrl();
                     setBackendUrlInput(getEnvBackendUrl() || '');
                     setServerSavedSuccess(true);
