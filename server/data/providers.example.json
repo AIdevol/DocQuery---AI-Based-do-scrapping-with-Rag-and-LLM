@@ -1,0 +1,88 @@
+[
+  {
+    "id": "prov-groq",
+    "name": "Groq (Ultra-Fast)",
+    "type": "groq",
+    "baseUrl": "https://api.groq.com/openai/v1",
+    "defaultModel": "qwen/qwen3.8-27b",
+    "availableModels": [
+      "qwen/qwen3.8-27b",
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      "llama-3.3-70b-versatile"
+    ],
+    "isDefault": false,
+    "status": "untested"
+  },
+  {
+    "id": "prov-openai",
+    "name": "OpenAI",
+    "type": "openai",
+    "baseUrl": "https://api.openai.com/v1",
+    "defaultModel": "gpt-4o",
+    "availableModels": [
+      "gpt-4o",
+      "gpt-4o-mini",
+      "gpt-4-turbo",
+      "o3-mini",
+      "o1"
+    ],
+    "isDefault": false,
+    "status": "untested"
+  },
+  {
+    "id": "prov-anthropic",
+    "name": "Anthropic Claude",
+    "type": "anthropic",
+    "baseUrl": "https://api.anthropic.com",
+    "defaultModel": "claude-sonnet-4-5-20250929",
+    "availableModels": [
+      "claude-sonnet-4-5-20250929",
+      "claude-haiku-4-5-20251001",
+      "claude-sonnet-4-6",
+      "claude-sonnet-5"
+    ],
+    "isDefault": true,
+    "status": "untested"
+  },
+  {
+    "id": "prov-gemini",
+    "name": "Google Gemini",
+    "type": "gemini",
+    "baseUrl": "https://generativelanguage.googleapis.com",
+    "defaultModel": "gemini-2.0-flash",
+    "availableModels": [
+      "gemini-2.0-flash",
+      "gemini-1.5-pro",
+      "gemini-1.5-flash"
+    ],
+    "isDefault": false,
+    "status": "untested"
+  },
+  {
+    "id": "prov-ollama",
+    "name": "Local Ollama",
+    "type": "ollama",
+    "baseUrl": "http://localhost:11434",
+    "defaultModel": "llama3.2",
+    "availableModels": [
+      "llama3.2",
+      "mistral:latest",
+      "qwen2.5"
+    ],
+    "isDefault": false,
+    "status": "untested"
+  },
+  {
+    "id": "prov-custom",
+    "name": "Custom OpenAI-Compatible",
+    "type": "custom",
+    "baseUrl": "",
+    "defaultModel": "default-model",
+    "availableModels": [
+      "default-model"
+    ],
+    "isDefault": false,
+    "status": "untested"
+  }
+]

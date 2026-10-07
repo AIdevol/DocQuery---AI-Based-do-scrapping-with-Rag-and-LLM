@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build Outputs
+dist/
+client/dist/
+
+# Local Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+LIVE_URL.txt
+
+# Server Runtime Data & Config with Secrets
+server/data/providers.json
+server/dist/
+
+# Logs & OS Temporary Files
+*.log
+/tmp/
+.DS_Store
+client/.DS_Store
+server/.DS_Store
+Thumbs.db

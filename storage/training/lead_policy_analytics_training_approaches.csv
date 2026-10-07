@@ -1,0 +1,85 @@
+approach_type,intent,question_type,operation,columns_used,date_basis,filter_logic,calculation_rules,validation_or_output_rule
+METRIC,Policies sold,Policies sold / issued,COUNT,Sold,Date Sold,normalized(Sold)=='issued',Count rows; never use unique POLICY#; exclude Flat Cancel,Primary sold metric
+METRIC,Quotes,Quotes,COUNT,Quoted Date,Quoted Date,Quoted Date is not null,Includes quotes that later became Issued,Quote count
+METRIC,Quoted-not-sold,Quoted-not-sold,COUNT,Sold,Quoted Date,normalized(Sold)=='quoted',Use Sold status exactly,Quoted but not issued
+METRIC,Flat cancels,Flat cancels,COUNT,Sold,Date Sold,normalized(Sold)=='flat cancel',Never include in Policies Sold,Report separately
+METRIC,Leads,Total leads,COUNT,All columns,Added Time,none,COUNT all source rows,Date basis is Added Time
+METRIC,Premium written,Premium written,SUM,Premium Amt,Date Sold,normalized(Sold)=='issued',Sum only Issued rows,Do not infer premium from other statuses
+METRIC,Average premium,Average premium,MEAN,Premium Amt,Date Sold,normalized(Sold)=='issued',Mention median if mean is skewed,Issued only
+METRIC,Unique policies,Unique policies,NUNIQUE,POLICY#,Date Sold,normalized(Sold)=='issued',Exclude blank POLICY# from nunique; report blank count if useful,Different from sold row count
+METRIC,Close rate,Close rate,RATIO,Sold + Quoted Date,Quoted Date,Issued / rows with Quoted Date,Same period and date basis,State date basis
+GROUPBY,Sold by Lead Type,Sold status by Lead Type,GROUPBY COUNT,Lead Type + Sold,Requested date column if any,User filters first,Normalize categorical values; retain blanks,Show all <=25; else top20 + Others + full count
+GROUPBY,Sold by Agent,Policies sold by Agent Sold,GROUPBY COUNT,Agent Sold + Sold,Date Sold,Sold=='issued',Normalize Agent Sold,Descending
+GROUPBY,Quoted by Agent,Quotes by Agent Quoted,GROUPBY COUNT,Agent Quoted + Quoted Date,Quoted Date,Quoted Date not null,Normalize Agent Quoted,Descending
+GROUPBY,Lead Source distribution,Leads by Lead Source,GROUPBY COUNT,Lead Source,Added Time,User period if specified,Keep blank bucket,Descending
+GROUPBY,Partner distribution,Leads by Partner Name,GROUPBY COUNT,Partner Name,Added Time,User period if specified,Keep blank bucket,Descending
+GROUPBY,Carrier distribution,Issued by Ins Company,GROUPBY COUNT,Ins Company + Sold,Date Sold,Sold=='issued',Keep blanks,Descending
+GROUPBY,Line of business,Issued by Line of Biz,GROUPBY COUNT,Line of Biz + Sold,Date Sold,Sold=='issued',Do not merge distinct LOB values,Descending
+GROUPBY,Lead Type distribution,Records by Lead Type,GROUPBY COUNT,Lead Type,Added Time,User period if specified,Normalize case/whitespace; retain blank,Descending
+GROUPBY,State distribution,Leads by State,GROUPBY COUNT,State,Added Time,User period if specified,Normalize case/whitespace; retain blank,Descending
+GROUPBY,Garaging State,Leads by Garaging State,GROUPBY COUNT,Garaging State,Added Time,User period if specified,Normalize categorical values,Descending
+GROUPBY,City distribution,Leads by City,GROUPBY COUNT,City,Added Time,User period if specified,Normalize whitespace/case carefully,Descending
+GROUPBY,Method distribution,Issued by Method,GROUPBY COUNT,Method + Sold,Date Sold,Sold=='issued',Keep blanks,Descending
+GROUPBY,Customer Type,Leads by Customer Type,GROUPBY COUNT,Customer Type,Added Time,User period if specified,Keep blank bucket,Descending
+FILTER,Partner Name filter,Leads with Partner Name X,COUNT,Partner Name,Added Time,normalized(Partner Name)==X,Never substitute Lead Source,Exact requested column
+FILTER,Lead Source filter,Leads with Lead Source X,COUNT,Lead Source,Added Time,normalized(Lead Source)==X,Never substitute Partner Name,Exact requested column
+FILTER,Agent Sold filter,Policies sold by Agent X,COUNT,Agent Sold + Sold,Date Sold,Agent Sold==X AND Sold=='issued',Use Date Sold,Issued only
+FILTER,Agent Quoted filter,Quotes by Agent X,COUNT,Agent Quoted + Quoted Date,Quoted Date,Agent Quoted==X AND Quoted Date not null,Use Quoted Date,Quote metric
+FILTER,Carrier filter,Policies issued by carrier X,COUNT,Ins Company + Sold,Date Sold,Ins Company==X AND Sold=='issued',Use exact field,Issued only
+FILTER,Lead Type filter,Records with Lead Type X,COUNT,Lead Type,Added Time,normalized(Lead Type)==X,Normalize categorical field,All statuses unless user says sold
+FILTER,State filter,Leads in state X,COUNT,State,Added Time,normalized(State)==X,Do not use Garaging State unless asked,All records by default
+TIME,Monthly sold,Policies sold in month,COUNT,Sold + Date Sold,Date Sold,Sold=='issued' AND month/year match,Resolve year explicitly,Most recent complete occurrence if year omitted
+TIME,Monthly quotes,Quotes in month,COUNT,Quoted Date,Quoted Date,Quoted Date within month,Includes later Issued,Date basis Quote Date
+TIME,Monthly leads,Leads created in month,COUNT,Added Time,Added Time,Added Time within month,Parse timestamp format,Creation basis
+TIME,Quarterly sold,Policies sold by quarter,GROUPBY COUNT,Sold + Date Sold,Date Sold,Sold=='issued',Quarter = calendar quarter unless specified,Chronological
+TIME,Weekly sold,Policies sold by week,GROUPBY COUNT,Sold + Date Sold,Date Sold,Sold=='issued',Define week convention,State convention
+TIME,Yearly sold,Policies sold by year,GROUPBY COUNT,Sold + Date Sold,Date Sold,Sold=='issued',Use valid dates only,Chronological
+TIME,Month-over-month,Current vs previous month,COMPARE,Sold + Date Sold,Date Sold,Sold=='issued',Calculate absolute and % change,Same metric
+TIME,Year-over-year,Same month vs prior year,COMPARE,Sold + Date Sold,Date Sold,Sold=='issued',Compare same calendar month,State years
+TIME,Date range sold,Policies sold between dates,COUNT,Sold + Date Sold,Date Sold,Sold=='issued' AND start<=date<=end,Use inclusive/exclusive consistently,State range
+DISTINCT,Unique Lead Sources,Unique Lead Source values,NUNIQUE,Lead Source,None,Exclude blank by default unless asked,Normalize values first,List values if requested
+DISTINCT,Unique Partner Names,Unique Partner Name values,NUNIQUE,Partner Name,None,Exclude blank by default,Normalize values,List values if requested
+DISTINCT,Unique Lead Types,Unique Lead Type values,NUNIQUE,Lead Type,None,Exclude blank by default,Normalize case/whitespace,AUTO and Auto merge
+DISTINCT,Unique Agents Sold,Unique Agent Sold values,NUNIQUE,Agent Sold,None,Exclude blank by default,Normalize names,List if requested
+DISTINCT,Unique carriers,Unique Ins Company values,NUNIQUE,Ins Company,None,Exclude blank by default,Normalize whitespace/case,List if requested
+DISTINCT,Unique policies,Unique POLICY# among Issued,NUNIQUE,POLICY# + Sold,Date Sold,Sold=='issued',Blank policy numbers are not unique policies,Report blank count if useful
+RANK,Top Agent Sold,Agent with most policies sold,GROUPBY+MAX,Agent Sold + Sold,Date Sold,Sold=='issued',Exact requested dimension,No ranking tie-breaking without rule
+RANK,Top Lead Type,Lead Type with most records,GROUPBY+MAX,Lead Type,Added Time,No status filter unless requested,Include blank if requested/default,Do not invent Category
+RANK,Top Lead Source,Lead Source with most leads,GROUPBY+MAX,Lead Source,Added Time,No status filter unless requested,Keep blanks separately,No column substitution
+RANK,Top carrier,Carrier with most issued policies,GROUPBY+MAX,Ins Company + Sold,Date Sold,Sold=='issued',Normalize carrier names,Descending
+RANK,Top partner,Partner with most leads,GROUPBY+MAX,Partner Name,Added Time,No status filter unless requested,Exact Partner Name field,Never use Lead Source instead
+RANK,Top city,City with most leads,GROUPBY+MAX,City,Added Time,No status filter unless requested,Normalize whitespace/case,Descending
+CROSSTAB,Lead Type x Sold,Sold status by Lead Type,CROSSTAB COUNT,Lead Type + Sold,Added Time unless date filter,User period filter first,Include blank buckets,Rows reconcile to filtered total
+CROSSTAB,Agent x Sold,Sold status by Agent Sold,CROSSTAB COUNT,Agent Sold + Sold,Added Time unless status/date metric,Normalize names,Blank Agent bucket retained,Do not imply sales from Date Sold alone
+CROSSTAB,Source x Lead Type,Lead Source by Lead Type,CROSSTAB COUNT,Lead Source + Lead Type,Added Time,No status filter unless asked,Retain blanks,Reconcile total
+CROSSTAB,Carrier x Lead Type,Carrier by Lead Type,CROSSTAB COUNT,Ins Company + Lead Type,Added Time,No status filter unless asked,Retain blanks,Reconcile total
+QUALITY,Missing values,Missing count by column,COUNTNULL,Any column,None,null/blank rules,Do not call missing zero,Report count and %
+QUALITY,Missing Sold,Leads with blank Sold,COUNTNULL,Sold,None,Sold blank,Blank means no activity logged,Do not call Quoted/Not Sold
+QUALITY,Missing Policy Number,Issued rows with blank POLICY#,COUNTNULL,POLICY# + Sold,Date Sold,Sold=='issued' AND POLICY# blank,Report separately,Does not remove Issued row
+QUALITY,Invalid dates,Unparsed dates,COUNT,Relevant date column,Relevant date,Parse with exact format,Never silently drop,Report unparsed count
+QUALITY,Duplicate policy numbers,Repeated POLICY#,GROUPBY COUNT,POLICY#,None,Exclude blank unless asked,Show duplicate frequency,Does not change sold count
+QUALITY,Duplicate Lead IDs,Duplicate ID values,NUNIQUE/COUNT,ID,None,ID should be unique,Report duplicates,Data quality issue
+QUALITY,Source row count,Exact CSV rows,COUNT,All rows,None,None,Must equal len(df),Baseline for audits
+AUDIT,Group reconciliation,Check grouped totals,SUM vs COUNT,Requested group column,Same as metric,Same filter applied,SUM group counts must equal filtered rows,PASS/FAIL
+AUDIT,Percentage reconciliation,Check percentages,SUM,Grouped metric,Same as metric,Same filter,Percentages should total ~100%,Allow rounding tolerance
+AUDIT,Filter audit,Verify exact field used,SCHEMA CHECK,Requested column,Metric-specific,Exact field match,No semantic substitution,Fail if wrong field
+AUDIT,Status audit,Verify sold status,VALUE CHECK,Sold,Date Sold,Issued only,Flat Cancel never included,Fail if any Flat Cancel included
+AUDIT,Date audit,Verify date basis,SCHEMA CHECK,Metric-specific date,Metric-specific,Sold→Date Sold; Quote→Quoted Date; Leads→Added Time,Never substitute dates,Fail if wrong date field
+AUDIT,Source integrity,Prevent impossible counts,COUNT,All rows,None,None,No result may exceed source row count,Fail if group/filter count > source rows
+COMPOUND,Sold by agent in month,Agent sales for month,GROUPBY COUNT,Agent Sold + Sold,Date Sold,Sold=='issued' AND month filter,Exact date basis,Descending
+COMPOUND,Quotes by source in month,Quotes by Lead Source,GROUPBY COUNT,Lead Source + Quoted Date,Quoted Date,Quoted Date within month,Normalize source,Descending
+COMPOUND,Issued by carrier and state,Issued by carrier/state,GROUPBY COUNT,Ins Company + State + Sold,Date Sold,Sold=='issued',Keep blanks,Descending
+COMPOUND,Lead Type sold rate,Issued rate by Lead Type,RATIO GROUPBY,Lead Type + Sold + Quoted Date,Quoted Date,Issued / quoted rows,Same period,State denominator
+COMPOUND,Agent close rate,Close rate by Agent Quoted,RATIO GROUPBY,Agent Quoted + Sold + Quoted Date,Quoted Date,Issued / quoted rows,Agent Quoted is denominator dimension,State basis
+COMPOUND,Partner sales,Issued by Partner Name,GROUPBY COUNT,Partner Name + Sold,Date Sold,Sold=='issued',Exact Partner Name field,Never substitute Lead Source
+SAFEGUARD,Ambiguous category,User says 'category' without field,CLARIFY,None,None,No Category column,Do not select a column automatically,Ask one sharp clarification
+SAFEGUARD,Ambiguous month,User says 'August',RESOLVE DATE,Relevant date column,Metric-specific,Most recent complete occurrence,State resolved month/year,Do not use previous answer
+SAFEGUARD,Ambiguous policies,User says 'policies',USE DEFAULT,Sold + Date Sold,Date Sold,Default to Issued row count,Mention unique policies only if explicitly requested,Do not substitute NUNIQUE
+SAFEGUARD,Wrong-column prevention,Partner Name vs Lead Source,EXACT MATCH,Named field,Metric-specific,Use exact requested column,No substitution,Show executed filter
+SAFEGUARD,No fabricated field,User asks unknown column,SCHEMA CHECK,Requested field,None,Column absent,Do not infer closest field,Ask/identify unavailable field
+SAFEGUARD,No historical answer reuse,Repeated question,RECOMPUTE,Current CSV,Metric-specific,Always execute fresh calculation,Never use previous answer as source,Current file is authoritative
+OUTPUT,Simple count,Single requested count,COUNT,User-specified field,Metric-specific,User filter,Lead with bold number,Second line is filter
+OUTPUT,Grouped result <=25,Full group table,GROUPBY,User field,Metric-specific,User filters,Show all groups,Descending by metric
+OUTPUT,Grouped result >25,Top groups,GROUPBY,User field,Metric-specific,User filters,Top20 + Others + full group count,Do not hide total
+OUTPUT,Comparison,Two periods,COMPARE,Same metric,Metric-specific,Two explicit periods,Show both values and difference,No unsupported causal claim
+OUTPUT,Trend,Monthly/weekly trend,GROUPBY TIME,Metric-specific,Metric-specific,Requested period,Chronological order,Don't aggregate away periods

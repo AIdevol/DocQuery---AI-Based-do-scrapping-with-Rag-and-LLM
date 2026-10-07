@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: universal-file-qa-workspace
+    env: node
+    plan: free
+    buildCommand: npm run build:all
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.0.0
+      - key: PORT
+        value: 3001
+
